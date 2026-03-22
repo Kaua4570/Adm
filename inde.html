@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel ADM</title>
+
+<style>
+body {
+  background: #0f0f0f;
+  color: white;
+  font-family: Arial;
+  padding: 20px;
+}
+
+h2 {
+  margin-bottom: 20px;
+}
+
+.box {
+  background: #1a1a1a;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+}
+
+select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  background: #000;
+  color: #fff;
+  border: 1px solid #444;
+}
+
+#historico p {
+  margin: 5px 0;
+  font-size: 14px;
+  border-bottom: 1px solid #333;
+  padding-bottom: 5px;
+}
+</style>
+</head>
+
+<body>
+
+<h2>Painel ADM</h2>
+
+<div class="box">
+  <select id="placa" onchange="buscar()">
+    <option value="">Selecione a placa</option>
+    <option value="UGT4A60">UGT4A60</option>
+    <option value="SDP9J13">SDP9J13</option>
+    <option value="SGH8C18">SGH8C18</option>
+  </select>
+</div>
+
+<div class="box">
+  <p><b>Último motorista:</b> <span id="motorista">-</span></p>
+  <p><b>KM atual:</b> <span id="km">-</span></p>
+  <p><b>Jornada:</b> <span id="jornada">-</span></p>
+</div>
+
+<div class="box">
+  <b>Histórico:</b>
+  <div id="historico"></div>
+</div>
+
+<script>
+function buscar() {
+  let placa = document.getElementById("placa").value;
+
+  if (!placa) return;
+
+  fetch("https://script.google.com/macros/s/AKfycbzpG5LrPDrIPfU4hP7ptpW1UZgOm40NLayt5Th7hJR-Yu9OawkmetQP4F2KASg1747v/exec?placa=" + placa)
+    .then(res => res.json())
+    .then(data => {
+
+      if (!data || data.length === 0) {
+        alert("Sem dados para essa placa");
+        return;
+      }
+
+      let ultimo = data[data.length - 1];
+
+      document.getElementById("motorista").innerText = ultimo.motorista || "-";
+      document.getElementById("km").innerText = ultimo.km || "-";
+      document.getElementById("jornada").innerText = ultimo.jornada || "-";
+
+      let html = "";
+
+      data.reverse().forEach(item => {
+        html += `<p>${item.data} | ${item.motorista} | KM ${item.km} | ${item.jornada}</p>`;
+      });
+
+      document.getElementById("historico").innerHTML = html;
+
+    })
+    .catch(err => {
+      console.log(err);
+      alert("Erro de conexão com o servidor");
+    });
+}
+</script>
+
+</body>
+</html>
