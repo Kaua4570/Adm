@@ -1,65 +1,61 @@
+const url = "https://opensheet.elk.sh/1Li9vCzsQploeT-CaCgKTx_Q3Kk5pj2v8MH6H94ZmmNw/1";
+
 let dados = [];
 
-const url = "https://docs.google.com/spreadsheets/d/1Li9vCzsQploeT-CaCgKTx_Q3Kk5pj2v8MH6H94ZmmNw/export?format=csv";
+async function carregarDados() {
+    try {
+        const resposta = await fetch(url);
+        dados = await resposta.json();
 
-fetch(url)
-  .then(res => res.text())
-  .then(texto => {
-
-    const linhas = texto.split('\n');
-    linhas.shift(); // remove cabeçalho
-
-    dados = linhas.map(linha => {
-      const col = linha.split(',');
-
-      return {
-        data: col[1],
-        motorista: col[2],
-        placa: col[3],
-        km: col[5],
-        jornada: col[6]
-      };
-    });
-
-    carregarPlacas();
-  });
+        carregarPlacas();
+    } catch (erro) {
+        console.error("Erro ao carregar dados:", erro);
+    }
+}
 
 function carregarPlacas() {
-  const select = document.getElementById('placaSelect');
+    const select = document.getElementById("placa");
 
-  const placas = [...new Set(dados.map(d => d.placa))];
+    const placas = [...new Set(dados.map(item => item["Placa"]))];
 
-  select.innerHTML = '<option>Selecione a placa</option>';
+    select.innerHTML = `<option value="">Selecione a placa</option>`;
 
-  placas.forEach(p => {
-    const opt = document.createElement('option');
-    opt.value = p;
-    opt.textContent = p;
-    select.appendChild(opt);
-  });
-
-  select.addEventListener('change', atualizarPainel);
+    placas.forEach(placa => {
+        const option = document.createElement("option");
+        option.value = placa;
+        option.textContent = placa;
+        select.appendChild(option);
+    });
 }
 
-function atualizarPainel() {
-  const placa = document.getElementById('placaSelect').value;
+function atualizarDados() {
+    const placaSelecionada = document.getElementById("placa").value;
 
-  const filtrados = dados.filter(d => d.placa === placa);
+    const filtrados = dados.filter(d => d["Placa"] === placaSelecionada);
 
-  if (filtrados.length === 0) return;
+    if (filtrados.length === 0) return;
 
-  const ultimo = filtrados[filtrados.length - 1];
+    // ordenar por data mais recente
+    filtrados.sort((a, b) => new Date(b["Carimbo de data/hora"]) - new Date(a["Carimbo de data/hora"]));
 
-  document.getElementById('motorista').textContent = ultimo.motorista || '-';
-  document.getElementById('km').textContent = ultimo.km || '-';
-  document.getElementById('jornada').textContent = ultimo.jornada || '-';
+    const ultimo = filtrados[0];
 
-  const hist = document.getElementById('historico');
-  hist.innerHTML = '';
+    document.getElementById("motorista").textContent = ultimo["Motorista"];
+    document.getElementById("km").textContent = ultimo["Km atual"];
+    document.getElementById("jornada").textContent = ultimo["Jornada"];
+    document.getElementById("veiculo").textContent = ultimo["Veículo"];
 
-  filtrados.slice(-10).reverse().forEach(d => {
-    const li = document.createElement('li');
-    li.textContent = `${d.data} - ${d.motorista} - KM: ${d.km}`;
-    hist.appendChild(li);
-  });
+    // histórico
+    const lista = document.getElementById("historico");
+    lista.innerHTML = "";
+
+    filtrados.slice(0, 10).forEach(item => {
+        const li = document.createElement("li");
+
+        li.textContent = `${item["Data"]} - ${item["Motorista"]} - ${item["Veículo"]} - KM: ${item["Km atual"]}`;
+
+        lista.appendChild(li);
+    });
 }
+
+carregarDados();
