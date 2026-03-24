@@ -1,43 +1,118 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>Painel ADM</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel ADM</title>
 
-  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial;
+      background: url("fundo.png") no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      text-align: center;
+    }
+
+    h1 {
+      margin-top: 40px;
+    }
+
+    select {
+      width: 80%;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+
+    .card {
+      background: rgba(0,0,0,0.8);
+      margin: 20px;
+      padding: 20px;
+      border-radius: 15px;
+      text-align: left;
+    }
+  </style>
 </head>
 
 <body>
 
-  <h1>Painel ADM</h1>
+<h1>Painel ADM</h1>
 
-  <div class="container">
+<select id="placaSelect">
+  <option value="">Selecione a placa</option>
+</select>
 
-    <select id="placaSelect" onchange="carregarDados()">
-      <option value="">Selecione a placa</option>
-    </select>
+<div class="card">
+  <p><b>Último motorista:</b> <span id="motorista">-</span></p>
+  <p><b>KM atual:</b> <span id="km">-</span></p>
+  <p><b>Jornada:</b> <span id="jornada">-</span></p>
+  <p><b>Veículo:</b> <span id="veiculo">-</span></p>
+</div>
 
-    <div class="card">
-      <p><strong>Último motorista:</strong> <span id="motorista">-</span></p>
-<p><strong>KM atual:</strong> <span id="km">-</span></p>
-<p><strong>Jornada:</strong> <span id="jornada">-</span></p>
-<p><strong>Veículo:</strong> <span id="veiculo">-</span></p>
-    </div>
+<div class="card">
+  <h3>Histórico:</h3>
+  <ul id="historico"></ul>
+</div>
 
-    <div class="card">
-      <p><b>Histórico:</b></p>
-      <ul id="historico"></ul>
-    </div>
+<script>
+const URL = "https://opensheet.elk.sh/1Li9vCzsQploeT-CaCgKTx_Q3Kk5pj2v8MH6H94ZmmNw/Respostas ao formulário 1";
 
-  </div>
+let dados = [];
 
-  <script src="script.js"></script>
-  <script>
+fetch(URL)
+  .then(res => res.json())
+  .then(json => {
+    dados = json;
+
+    const placas = [...new Set(dados.map(d => d.Placa))];
+
+    const select = document.getElementById("placaSelect");
+
+    placas.forEach(p => {
+      const op = document.createElement("option");
+      op.value = p;
+      op.textContent = p;
+      select.appendChild(op);
+    });
+  });
+
+document.getElementById("placaSelect").addEventListener("change", function() {
+  const placa = this.value;
+
+  const filtrado = dados.filter(d => d.Placa === placa);
+
+  if (filtrado.length === 0) return;
+
+  // ordena por data mais recente
+  filtrado.sort((a,b) => new Date(b["Carimbo de data/hora"]) - new Date(a["Carimbo de data/hora"]));
+
+  const ultimo = filtrado[0];
+
+  document.getElementById("motorista").textContent = ultimo.Motorista;
+  document.getElementById("km").textContent = ultimo["Km atual"];
+  document.getElementById("jornada").textContent = ultimo.Jornada;
+  document.getElementById("veiculo").textContent = ultimo.Veículo;
+
+  const lista = document.getElementById("historico");
+  lista.innerHTML = "";
+
+  filtrado.slice(0,10).forEach(item => {
+    const li = document.createElement("li");
+    li.textContent = `${item.Data} - ${item.Motorista} - KM: ${item["Km atual"]}`;
+    lista.appendChild(li);
+  });
+});
+
+// PWA (app)
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
 }
-  </script>
+</script>
 
 </body>
 </html>
