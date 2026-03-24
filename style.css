@@ -1,0 +1,37 @@
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #0f0f0f;
+  color: white;
+}
+
+h1 {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.container {
+  padding: 15px;
+}
+
+select {
+  width: 100%;
+  padding: 15px;
+  border-radius: 10px;
+  border: 2px solid orange;
+  background: #1c1c1c;
+  color: white;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+.card {
+  background: #1c1c1c;
+  padding: 15px;
+  border-radius: 15px;
+  margin-bottom: 20px;
+}
+
+ul {
+  padding-left: 20px;
+}

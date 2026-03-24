@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Painel ADM</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <h1>Painel ADM</h1>
+
+  <div class="container">
+
+    <select id="placaSelect" onchange="carregarDados()">
+      <option value="">Selecione a placa</option>
+    </select>
+
+    <div class="card">
+      <p><b>Último motorista:</b> <span id="motorista">-</span></p>
+      <p><b>KM atual:</b> <span id="km">-</span></p>
+      <p><b>Jornada:</b> <span id="jornada">-</span></p>
+    </div>
+
+    <div class="card">
+      <p><b>Histórico:</b></p>
+      <ul id="historico"></ul>
+    </div>
+
+  </div>
+
+  <script src="script.js"></script>
+
+</body>
+</html>
