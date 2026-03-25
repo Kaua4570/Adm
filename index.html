@@ -13,16 +13,27 @@
 body {
   font-family: Arial;
   margin: 0;
-  background: #111;
-  color: white;
   display: flex;
   justify-content: center;
+
+  background: url("fundo.png") no-repeat center center fixed;
+  background-size: cover;
+}
+
+/* 🔥 camada escura */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: -1;
 }
 
 .container {
   width: 100%;
   max-width: 420px;
   padding: 20px;
+  color: white;
 }
 
 h1 {
@@ -35,21 +46,29 @@ select {
   border-radius: 10px;
   margin-bottom: 15px;
   border: none;
+  background: #1e1e1e;
+  color: #fff;
 }
 
 .card {
-  background: #1c1c1c;
+  background: #121212;
   padding: 15px;
-  border-radius: 12px;
+  border-radius: 15px;
   margin-bottom: 15px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
 ul {
   padding-left: 20px;
 }
 
+li {
+  margin-bottom: 8px;
+  color: #ddd;
+}
+
 canvas {
-  background: #fff;
+  background: #1a1a1a;
   border-radius: 10px;
   padding: 10px;
 }
@@ -63,7 +82,8 @@ canvas {
 
 <h1>Painel ADM</h1>
 
-<select id="placaSelect">
+<!-- 🔥 CORREÇÃO AQUI -->
+<select id="placaSelect" onchange="selecionarPlaca()">
   <option value="">Selecione a placa</option>
 </select>
 
