@@ -1,21 +1,14 @@
 const url = "https://opensheet.elk.sh/1Li9vCzsQploeT-CaCgKTx_Q3Kk5pj2v8MH6H94ZmmNw/Respostas ao formulário 1";
 
 let dados = [];
+let grafico = null;
 
 // 🔥 Buscar dados
 fetch(url)
   .then(res => res.json())
   .then(res => {
-
     dados = res.filter(item => Object.keys(item).length > 0);
-
-    console.log("DADOS:", dados);
-
     carregarPlacas();
-
-    // 🔥 EVENTO DO SELECT (FALTAVA ISSO)
-    document.getElementById("placaSelect")
-      .addEventListener("change", selecionarPlaca);
   });
 
 // 🔥 Corrige nomes das colunas
@@ -23,7 +16,7 @@ function pegar(item, campo) {
   const chave = Object.keys(item).find(k =>
     k.trim().toLowerCase() === campo.trim().toLowerCase()
   );
-  return chave ? item[chave] : "-";
+  return chave ? item[chave] : "";
 }
 
 // 🔥 Normaliza texto
@@ -31,11 +24,15 @@ function normalizar(texto) {
   return texto ? texto.toString().trim().toLowerCase() : "";
 }
 
+// 🔥 Converte KM para número
+function numero(valor) {
+  let n = parseFloat(valor);
+  return isNaN(n) ? 0 : n;
+}
+
 // 🔥 Carrega placas
 function carregarPlacas() {
   const select = document.getElementById("placaSelect");
-
-  select.innerHTML = '<option value="">Selecione a placa</option>';
 
   const placas = [...new Set(
     dados.map(item => normalizar(pegar(item, "Placa")))
@@ -53,7 +50,6 @@ function carregarPlacas() {
 
 // 🔥 Selecionar placa
 function selecionarPlaca() {
-
   const placaSelecionada = normalizar(
     document.getElementById("placaSelect").value
   );
@@ -64,7 +60,7 @@ function selecionarPlaca() {
 
   if (filtrados.length === 0) return;
 
-  // 🔥 Ordena por data
+  // 🔥 Ordena por data (mais recente primeiro)
   filtrados.sort((a, b) =>
     new Date(pegar(b, "Carimbo de data/hora")) -
     new Date(pegar(a, "Carimbo de data/hora"))
@@ -72,47 +68,77 @@ function selecionarPlaca() {
 
   const ultimo = filtrados[0];
 
-  // ✅ DADOS PRINCIPAIS
+  // 🔥 Dados principais
   document.getElementById("motorista").textContent = pegar(ultimo, "Motorista");
-  document.getElementById("km").textContent = pegar(ultimo, "Km atual");
+  document.getElementById("km").textContent = pegar(ultimo, "Km atual") || "0";
   document.getElementById("jornada").textContent = pegar(ultimo, "Jornada");
   document.getElementById("veiculo").textContent = pegar(ultimo, "Veículo");
 
-  // ✅ HISTÓRICO
+  // 🔥 Histórico
   const historico = document.getElementById("historico");
 
   historico.innerHTML = filtrados.slice(0, 10).map(item => `
     <li>
-      ${pegar(item, "Carimbo de data/hora")} - 
-      ${pegar(item, "Motorista")} - 
-      KM: ${pegar(item, "Km atual")}
+      ${pegar(item, "Data")} - ${pegar(item, "Motorista")} - KM: ${pegar(item, "Km atual")}
     </li>
   `).join("");
 
-  // ✅ GRÁFICO (AGORA FUNCIONA)
-  const labels = filtrados.map(item =>
-    pegar(item, "Carimbo de data/hora")
+  // 🔥 GRÁFICO (ordem correta agora)
+  const dadosGrafico = filtrados
+    .slice()
+    .reverse(); // antigo → novo
+
+  const labels = dadosGrafico.map(item =>
+    pegar(item, "Data")
   );
 
-  const kms = filtrados.map(item =>
-    parseFloat(pegar(item, "Km atual")) || 0
+  const kms = dadosGrafico.map(item =>
+    numero(pegar(item, "Km atual"))
   );
 
-  const ctx = document.getElementById("graficoKm");
+  atualizarGrafico(labels, kms);
+}
 
-  if (window.grafico) window.grafico.destroy();
+// 🔥 Atualiza gráfico
+function atualizarGrafico(labels, dadosKM) {
+  const ctx = document.getElementById("graficoKm").getContext("2d");
 
-  window.grafico = new Chart(ctx, {
+  if (grafico) {
+    grafico.destroy();
+  }
+
+  grafico = new Chart(ctx, {
     type: "line",
     data: {
-      labels: labels.reverse(),
+      labels: labels,
       datasets: [{
         label: "KM",
-        data: kms.reverse(),
-        borderWidth: 2,
-        tension: 0.3
+        data: dadosKM,
+        borderColor: "#25D366",
+        backgroundColor: "rgba(37,211,102,0.2)",
+        tension: 0.3,
+        fill: true
       }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          labels: {
+            color: "#fff"
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: "#ccc" },
+          grid: { color: "#333" }
+        },
+        y: {
+          ticks: { color: "#ccc" },
+          grid: { color: "#333" }
+        }
+      }
     }
   });
-
 }
