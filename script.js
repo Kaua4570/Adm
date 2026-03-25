@@ -7,11 +7,12 @@ let grafico = null;
 fetch(url)
   .then(res => res.json())
   .then(res => {
+    // remove linhas vazias
     dados = res.filter(item => Object.keys(item).length > 0);
     carregarPlacas();
   });
 
-// 🔥 Corrige nomes das colunas
+// 🔥 Corrige nome das colunas
 function pegar(item, campo) {
   const chave = Object.keys(item).find(k =>
     k.trim().toLowerCase() === campo.trim().toLowerCase()
@@ -24,7 +25,7 @@ function normalizar(texto) {
   return texto ? texto.toString().trim().toLowerCase() : "";
 }
 
-// 🔥 Converte KM para número
+// 🔥 Converte KM
 function numero(valor) {
   let n = parseFloat(valor);
   return isNaN(n) ? 0 : n;
@@ -54,17 +55,15 @@ function selecionarPlaca() {
     document.getElementById("placaSelect").value
   );
 
-  const filtrados = dados.filter(item =>
+  // 🔥 FILTRA NORMAL
+  let filtrados = dados.filter(item =>
     normalizar(pegar(item, "Placa")) === placaSelecionada
   );
 
   if (filtrados.length === 0) return;
 
-  // 🔥 Ordena por data (mais recente primeiro)
-  filtrados.sort((a, b) =>
-    new Date(pegar(b, "Carimbo de data/hora")) -
-    new Date(pegar(a, "Carimbo de data/hora"))
-  );
+  // 🔥 INVERTE (mais recente primeiro)
+  filtrados = filtrados.reverse();
 
   const ultimo = filtrados[0];
 
@@ -74,7 +73,7 @@ function selecionarPlaca() {
   document.getElementById("jornada").textContent = pegar(ultimo, "Jornada");
   document.getElementById("veiculo").textContent = pegar(ultimo, "Veículo");
 
-  // 🔥 Histórico
+  // 🔥 Histórico (já vem certo agora)
   const historico = document.getElementById("historico");
 
   historico.innerHTML = filtrados.slice(0, 10).map(item => `
@@ -83,10 +82,8 @@ function selecionarPlaca() {
     </li>
   `).join("");
 
-  // 🔥 GRÁFICO (ordem correta agora)
-  const dadosGrafico = filtrados
-    .slice()
-    .reverse(); // antigo → novo
+  // 🔥 GRÁFICO (ordem correta: antigo → novo)
+  const dadosGrafico = [...filtrados].reverse();
 
   const labels = dadosGrafico.map(item =>
     pegar(item, "Data")
@@ -117,7 +114,8 @@ function atualizarGrafico(labels, dadosKM) {
         borderColor: "#25D366",
         backgroundColor: "rgba(37,211,102,0.2)",
         tension: 0.3,
-        fill: true
+        fill: true,
+        borderWidth: 2
       }]
     },
     options: {
