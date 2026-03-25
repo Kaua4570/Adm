@@ -1,4 +1,4 @@
-const url = "https://script.google.com/macros/s/AKfycbwjZubw3RuIdjemAxw7xINiJmv9zuRGy_u0XAqC-C24AYHw4yoVaOU2SxLvSY3zt75a/exec";
+const url = "https://opensheet.elk.sh/1Li9vCzsQploeT-CaCgKTx_Q3Kk5pj2v8MH6H94ZmmNw/Respostas ao formulário 1";
 
 let dados = [];
 
@@ -6,32 +6,21 @@ let dados = [];
 fetch(url)
   .then(res => res.json())
   .then(res => {
-    dados = res.data || res;
-    console.log("DADOS:", dados);
+    dados = res;
     carregarPlacas();
   });
 
-// 🔥 NORMALIZA TEXTO (remove acento, espaço, etc)
-function limparTexto(texto) {
-  return texto
-    ? texto.toString()
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/\s+/g, "")
-        .trim()
-    : "";
+// 🔥 Corrige nome das colunas (ignora espaço, maiúscula etc)
+function pegar(item, campo) {
+  const chave = Object.keys(item).find(k =>
+    k.trim().toLowerCase() === campo.trim().toLowerCase()
+  );
+  return chave ? item[chave] : "-";
 }
 
-// 🔥 Função inteligente pra pegar campo (resolve TUDO)
-function pegar(item, campo) {
-  const campoNormal = limparTexto(campo);
-
-  const chave = Object.keys(item).find(k => {
-    return limparTexto(k) === campoNormal;
-  });
-
-  return chave ? item[chave] : "-";
+// 🔥 Normaliza texto
+function normalizar(texto) {
+  return texto ? texto.toString().trim().toLowerCase() : "";
 }
 
 // 🔥 Carrega placas
@@ -39,11 +28,12 @@ function carregarPlacas() {
   const select = document.getElementById("placaSelect");
 
   const placas = [...new Set(
-    dados.map(item => limparTexto(pegar(item, "Placa")))
+    dados.map(item => normalizar(pegar(item, "Placa")))
   )];
 
   placas.forEach(p => {
     if (!p) return;
+
     const opt = document.createElement("option");
     opt.value = p;
     opt.textContent = p.toUpperCase();
@@ -51,26 +41,27 @@ function carregarPlacas() {
   });
 }
 
-// 🔥 Quando seleciona placa
+// 🔥 Seleciona placa
 function selecionarPlaca() {
-  const placaSelecionada = limparTexto(
+  const placaSelecionada = normalizar(
     document.getElementById("placaSelect").value
   );
 
   const filtrados = dados.filter(item =>
-    limparTexto(pegar(item, "Placa")) === placaSelecionada
+    normalizar(pegar(item, "Placa")) === placaSelecionada
   );
 
   if (filtrados.length === 0) return;
 
-  // 🔥 Ordena por data mais recente
+  // 🔥 Ordena por data
   filtrados.sort((a, b) =>
-    new Date(pegar(b, "Carimbo de data/hora")) - new Date(pegar(a, "Carimbo de data/hora"))
+    new Date(pegar(b, "Carimbo de data/hora")) -
+    new Date(pegar(a, "Carimbo de data/hora"))
   );
 
   const ultimo = filtrados[0];
 
-  // 🔥 Preenche dados principais
+  // 🔥 Preenche dados
   document.getElementById("motorista").textContent = pegar(ultimo, "Motorista");
   document.getElementById("km").textContent = pegar(ultimo, "Km atual");
   document.getElementById("jornada").textContent = pegar(ultimo, "Jornada");
@@ -84,7 +75,3 @@ function selecionarPlaca() {
       ${pegar(item, "Data")} - ${pegar(item, "Motorista")} - KM: ${pegar(item, "Km atual")}
     </li>
   `).join("");
-}
-
-// 🔥 Ativa o select
-document.getElementById("placaSelect").addEventListener("change", selecionarPlaca);
