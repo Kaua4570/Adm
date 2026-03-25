@@ -1,99 +1,92 @@
-const URL = "https://opensheet.elk.sh/1Li9vCzsQploeT-CaCgKTx_Q3Kk5pj2v8MH6H94ZmmNw/Respostas ao formulário 1";
+const url = "https://opensheet.elk.sh/1Li9vCzsQploeT-CaCgKTx_Q3Kk5pj2v8MH6H94ZmmNw/Respostas ao formulário 1"; // seu opensheet
 
 let dados = [];
-let grafico;
+let grafico = null;
 
-// carregar dados
-fetch(URL)
-  .then(res => res.json())
-  .then(json => {
+async function carregarDados() {
+  const res = await fetch(url);
+  dados = await res.json();
 
-    dados = json
-      .filter(item => Object.keys(item).length > 0)
-      .map(item => {
-        let novo = {};
-        Object.keys(item).forEach(k => {
-          novo[k.trim()] = item[k];
-        });
-        return novo;
-      });
-
-    carregarPlacas();
-  });
-
-// carregar placas
-function carregarPlacas() {
-  const select = document.getElementById("placaSelect");
-
-  const placas = [...new Set(dados.map(d => d.Placa))];
-
-  placas.forEach(p => {
-    if (!p) return;
-    const opt = document.createElement("option");
-    opt.value = p;
-    opt.textContent = p;
-    select.appendChild(opt);
-  });
+  preencherSelect();
 }
 
-// evento
-document.getElementById("placaSelect").addEventListener("change", function () {
-  const placa = this.value;
+function limparTexto(valor) {
+  return valor ? valor.trim() : "";
+}
 
-  const filtrados = dados.filter(d => d.Placa === placa);
+function preencherSelect() {
+  const select = document.getElementById("placaSelect");
+  const placas = [...new Set(dados.map(d => limparTexto(d["Placa"])))];
+
+  placas.forEach(p => {
+    if (p) {
+      const opt = document.createElement("option");
+      opt.value = p;
+      opt.textContent = p;
+      select.appendChild(opt);
+    }
+  });
+
+  select.addEventListener("change", () => atualizarDados(select.value));
+}
+
+function atualizarDados(placa) {
+  const filtrados = dados.filter(d => limparTexto(d["Placa"]) === placa);
 
   if (filtrados.length === 0) return;
 
-  // ordenar por data mais recente
-  filtrados.sort((a, b) =>
-    new Date(b["Carimbo de data/hora"]) -
-    new Date(a["Carimbo de data/hora"])
-  );
+  // pegar último registro
+  const ultimo = filtrados[filtrados.length - 1];
 
-  const ultimo = filtrados[0];
-
-  // dados principais
-  document.getElementById("motorista").textContent = ultimo.Motorista || "-";
-  document.getElementById("km").textContent = ultimo["Km atual"] || "-";
-  document.getElementById("jornada").textContent = ultimo.Jornada || "-";
-  document.getElementById("veiculo").textContent = ultimo.Veículo || "-";
+  document.getElementById("motorista").textContent = limparTexto(ultimo["Motorista "]);
+  document.getElementById("km").textContent = limparTexto(ultimo["Km atual "]);
+  document.getElementById("jornada").textContent = limparTexto(ultimo["Jornada "]);
+  document.getElementById("veiculo").textContent = limparTexto(ultimo["Veículo "]);
 
   // histórico
-  document.getElementById("historico").innerHTML =
-    filtrados.slice(0, 5).map(item => `
-      <li>
-        ${item.Data} - ${item.Motorista} - KM: ${item["Km atual"]}
-      </li>
-    `).join("");
+  const historico = document.getElementById("historico");
+  historico.innerHTML = "";
+
+  filtrados.slice(-5).reverse().forEach(d => {
+    const li = document.createElement("li");
+    li.textContent = `${d["Data"]} - ${limparTexto(d["Motorista "])} - KM: ${limparTexto(d["Km atual "])}`;
+    historico.appendChild(li);
+  });
 
   gerarGrafico(filtrados);
-});
+}
 
-// 🔥 gráfico
 function gerarGrafico(lista) {
+  const ctx = document.getElementById("graficoKm").getContext("2d");
 
-  const ultimos = lista.slice(0, 7).reverse();
+  const labels = lista.map(d => d["Data"]);
+  const kms = lista.map(d => Number(limparTexto(d["Km atual "])));
 
-  const labels = ultimos.map(item => item.Data);
-  const kms = ultimos.map(item => Number(item["Km atual"]) || 0);
-
-  const ctx = document.getElementById('graficoKm').getContext('2d');
-
+  // destruir gráfico antigo
   if (grafico) {
     grafico.destroy();
   }
 
   grafico = new Chart(ctx, {
-    type: 'bar',
+    type: "line",
     data: {
       labels: labels,
       datasets: [{
-        label: 'KM',
-        data: kms
+        label: "KM",
+        data: kms,
+        fill: false,
+        tension: 0.3
       }]
     },
     options: {
-      responsive: true
+      responsive: true,
+      plugins: {
+        legend: {
+          display: true
+        }
+      }
     }
   });
 }
+
+carregarDados();
