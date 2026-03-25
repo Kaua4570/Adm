@@ -90,3 +90,5 @@ function gerarGrafico(lista) {
 }
 
 carregarDados();
+console.log("Script carregado");
+console.log(typeof Chart);
