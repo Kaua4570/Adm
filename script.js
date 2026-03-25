@@ -1,6 +1,7 @@
 const URL = "https://opensheet.elk.sh/1Li9vCzsQploeT-CaCgKTx_Q3Kk5pj2v8MH6H94ZmmNw/Respostas ao formulário 1";
 
 let dados = [];
+let grafico;
 
 // carregar dados
 fetch(URL)
@@ -18,13 +19,7 @@ fetch(URL)
       });
 
     carregarPlacas();
-    atualizarTela();
   });
-
-// normalizar texto
-function normalizar(txt) {
-  return txt ? txt.toString().trim().toLowerCase() : "";
-}
 
 // carregar placas
 function carregarPlacas() {
@@ -41,41 +36,15 @@ function carregarPlacas() {
   });
 }
 
-// eventos
-document.getElementById("placaSelect").addEventListener("change", atualizarTela);
-document.getElementById("buscaMotorista").addEventListener("input", atualizarTela);
-document.getElementById("filtroData").addEventListener("change", atualizarTela);
+// evento
+document.getElementById("placaSelect").addEventListener("change", function () {
+  const placa = this.value;
 
-// atualizar tudo
-function atualizarTela() {
-
-  let filtrados = [...dados];
-
-  const placa = normalizar(document.getElementById("placaSelect").value);
-  const motoristaBusca = normalizar(document.getElementById("buscaMotorista").value);
-  const dataFiltro = document.getElementById("filtroData").value;
-
-  // filtro placa
-  if (placa) {
-    filtrados = filtrados.filter(d => normalizar(d.Placa) === placa);
-  }
-
-  // filtro motorista
-  if (motoristaBusca) {
-    filtrados = filtrados.filter(d =>
-      normalizar(d.Motorista).includes(motoristaBusca)
-    );
-  }
-
-  // filtro data
-  if (dataFiltro) {
-    const dataFormatada = dataFiltro.split("-").reverse().join("/");
-    filtrados = filtrados.filter(d => d.Data === dataFormatada);
-  }
+  const filtrados = dados.filter(d => d.Placa === placa);
 
   if (filtrados.length === 0) return;
 
-  // ordenar
+  // ordenar por data mais recente
   filtrados.sort((a, b) =>
     new Date(b["Carimbo de data/hora"]) -
     new Date(a["Carimbo de data/hora"])
@@ -83,7 +52,7 @@ function atualizarTela() {
 
   const ultimo = filtrados[0];
 
-  // destaque
+  // dados principais
   document.getElementById("motorista").textContent = ultimo.Motorista || "-";
   document.getElementById("km").textContent = ultimo["Km atual"] || "-";
   document.getElementById("jornada").textContent = ultimo.Jornada || "-";
@@ -91,9 +60,40 @@ function atualizarTela() {
 
   // histórico
   document.getElementById("historico").innerHTML =
-    filtrados.slice(0, 15).map(item => `
+    filtrados.slice(0, 5).map(item => `
       <li>
-        ${item.Data} | ${item.Motorista} | KM: ${item["Km atual"]} | ${item.Jornada}
+        ${item.Data} - ${item.Motorista} - KM: ${item["Km atual"]}
       </li>
     `).join("");
+
+  gerarGrafico(filtrados);
+});
+
+// 🔥 gráfico
+function gerarGrafico(lista) {
+
+  const ultimos = lista.slice(0, 7).reverse();
+
+  const labels = ultimos.map(item => item.Data);
+  const kms = ultimos.map(item => Number(item["Km atual"]) || 0);
+
+  const ctx = document.getElementById('graficoKm').getContext('2d');
+
+  if (grafico) {
+    grafico.destroy();
+  }
+
+  grafico = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'KM',
+        data: kms
+      }]
+    },
+    options: {
+      responsive: true
+    }
+  });
 }
