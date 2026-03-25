@@ -1,69 +1,68 @@
-const url = "https://opensheet.elk.sh/1Li9vCzsQploeT-CaCgKTx_Q3Kk5pj2v8MH6H94ZmmNw/Respostas%20ao%20formulário%201";
+const url = "https://script.google.com/macros/s/AKfycbwjZubw3RuIdjemAxw7xINiJmv9zuRGy_u0XAqC-C24AYHw4yoVaOU2SxLvSY3zt75a/exec";
 
 let dados = [];
 
 fetch(url)
   .then(res => res.json())
-  .then(json => {
-
-    dados = json.map(item => {
-      return {
-        data: item["Data"] || "",
-        placa: item["Placa"] || "",
-        motorista: item["Motorista"] || "",
-        veiculo: item["Veículo"] || item["Veiculo"] || "",
-        km: item["Km atual"] || item["Km atual "] || item["Km atual "] || "",
-        jornada: item["Jornada"] || "",
-        carimbo: item["Carimbo de data/hora"] || ""
-      };
-    });
+  .then(res => {
+    dados = res.data || res;
+    console.log(dados); // 👈 IMPORTANTE (debug)
 
     carregarPlacas();
   });
 
+function pegar(item, campo) {
+  return item[campo] || item[campo.toLowerCase()] || item[campo.replace(/ /g, "_")] || "-";
+}
+
+function normalizar(texto) {
+  return texto?.toString().trim().toLowerCase();
+}
+
 function carregarPlacas() {
-  const select = document.getElementById("placa");
+  const select = document.getElementById("placaSelect");
 
-  let placasUnicas = [...new Set(dados.map(item => item.placa))];
+  const placas = [...new Set(
+    dados.map(item => normalizar(pegar(item, "Placa")))
+  )];
 
-  placasUnicas.forEach(placa => {
-    let option = document.createElement("option");
-    option.value = placa;
-    option.textContent = placa;
-    select.appendChild(option);
+  placas.forEach(p => {
+    if (!p) return;
+    const opt = document.createElement("option");
+    opt.value = p;
+    opt.textContent = p.toUpperCase();
+    select.appendChild(opt);
   });
 }
 
 function selecionarPlaca() {
-  const placa = document.getElementById("placa").value;
+  const placaSelecionada = normalizar(
+    document.getElementById("placaSelect").value
+  );
 
-  const filtrados = dados.filter(item => item.placa === placa);
+  const filtrados = dados.filter(
+    item => normalizar(pegar(item, "Placa")) === placaSelecionada
+  );
 
-  if (filtrados.length === 0) return;
+  if (!filtrados.length) return;
 
-  // ordenar por data/hora
-  filtrados.sort((a, b) => new Date(a.carimbo) - new Date(b.carimbo));
+  filtrados.sort((a, b) =>
+    new Date(pegar(b, "Carimbo de data/hora")) - new Date(pegar(a, "Carimbo de data/hora"))
+  );
 
-  const ultimo = filtrados[filtrados.length - 1];
+  const ultimo = filtrados[0];
 
-  document.getElementById("motorista").textContent =
-    "Último motorista: " + (ultimo.motorista || "-");
-
-  document.getElementById("km").textContent =
-    "KM atual: " + (ultimo.km || "-");
-
-  document.getElementById("jornada").textContent =
-    "Jornada: " + (ultimo.jornada || "-");
-
-  document.getElementById("veiculo").textContent =
-    "Veículo: " + (ultimo.veiculo || "-");
+  document.getElementById("motorista").textContent = pegar(ultimo, "Motorista");
+  document.getElementById("km").textContent = pegar(ultimo, "Km atual");
+  document.getElementById("jornada").textContent = pegar(ultimo, "Jornada");
+  document.getElementById("veiculo").textContent = pegar(ultimo, "Veículo");
 
   const historico = document.getElementById("historico");
   historico.innerHTML = "";
 
-  filtrados.slice(-5).reverse().forEach(item => {
-    let li = document.createElement("li");
-    li.textContent = `${item.data} - ${item.motorista} - KM: ${item.km}`;
+  filtrados.forEach(item => {
+    const li = document.createElement("li");
+    li.textContent = `${pegar(item, "Data")} - ${pegar(item, "Motorista")} - KM: ${pegar(item, "Km atual")}`;
     historico.appendChild(li);
   });
 }
