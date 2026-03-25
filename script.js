@@ -7,9 +7,6 @@ async function carregarDados() {
 
   const linhas = texto.split("\n").slice(1);
 
-  const select = document.getElementById("placaSelect");
-  const historico = document.getElementById("historico");
-
   let dados = [];
 
   linhas.forEach(linha => {
@@ -17,15 +14,22 @@ async function carregarDados() {
 
     if (col.length < 5) return;
 
+    // 🔥 AJUSTE AQUI (ORDEM REAL DA SUA PLANILHA)
     dados.push({
       data: col[0],
-      motorista: col[1],
       placa: col[2],
+      motorista: col[1],
       tipo: col[3],
-      km: parseFloat(col[4]),
+      km: parseFloat((col[4] || "0").replace(",", ".")),
       jornada: col[5]
     });
   });
+
+  const select = document.getElementById("placaSelect");
+  const historico = document.getElementById("historico");
+
+  // limpar select
+  select.innerHTML = '<option value="">Selecione a placa</option>';
 
   // placas únicas
   const placas = [...new Set(dados.map(d => d.placa))];
@@ -45,13 +49,12 @@ async function carregarDados() {
 
     if (filtrado.length === 0) return;
 
-    // último registro
     const ultimo = filtrado[filtrado.length - 1];
 
-    document.getElementById("motorista").textContent = ultimo.motorista;
-    document.getElementById("km").textContent = ultimo.km;
-    document.getElementById("jornada").textContent = ultimo.jornada;
-    document.getElementById("veiculo").textContent = ultimo.tipo;
+    document.getElementById("motorista").textContent = ultimo.motorista || "-";
+    document.getElementById("km").textContent = ultimo.km || "-";
+    document.getElementById("jornada").textContent = ultimo.jornada || "-";
+    document.getElementById("veiculo").textContent = ultimo.tipo || "-";
 
     // histórico
     historico.innerHTML = "";
@@ -68,9 +71,7 @@ async function carregarDados() {
 
     const ctx = document.getElementById("graficoKm");
 
-    if (window.grafico) {
-      window.grafico.destroy();
-    }
+    if (window.grafico) window.grafico.destroy();
 
     window.grafico = new Chart(ctx, {
       type: "line",
@@ -80,7 +81,6 @@ async function carregarDados() {
           label: "KM",
           data: kms,
           borderWidth: 2,
-          fill: false,
           tension: 0.3
         }]
       }
