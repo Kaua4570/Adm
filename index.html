@@ -5,69 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Painel ADM</title>
 
-  <link rel="manifest" href="manifest.json">
-
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      background: url("fundo.png") no-repeat center center fixed;
-      background-size: cover;
-      color: white;
-      text-align: center;
-    }
-
-    h1 {
-      margin-top: 40px;
-    }
-
-    select {
-      width: 80%;
-      padding: 15px;
-      border-radius: 10px;
-      font-size: 16px;
-      margin-top: 20px;
-    }
-
-    .card {
-      background: rgba(0,0,0,0.8);
-      margin: 20px;
-      padding: 20px;
-      border-radius: 15px;
-      text-align: left;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
 <h1>Painel ADM</h1>
 
-<select id="placaSelect" onchange="selecionarPlaca()">
-  <option value="">Selecione a placa</option>
-</select>
+<div class="filtros">
+  <select id="placaSelect">
+    <option value="">Todas as placas</option>
+  </select>
 
-<div class="card">
-  <p><b>Último motorista:</b> <span id="motorista">-</span></p>
-  <p><b>KM atual:</b> <span id="km">-</span></p>
+  <input type="text" id="buscaMotorista" placeholder="Buscar motorista">
+
+  <input type="date" id="filtroData">
+</div>
+
+<div class="card destaque">
+  <h3>Último Registro</h3>
+  <p><b>Motorista:</b> <span id="motorista">-</span></p>
+  <p><b>KM:</b> <span id="km">-</span></p>
   <p><b>Jornada:</b> <span id="jornada">-</span></p>
   <p><b>Veículo:</b> <span id="veiculo">-</span></p>
 </div>
 
 <div class="card">
-  <h3>Histórico:</h3>
+  <h3>Histórico</h3>
   <ul id="historico"></ul>
 </div>
 
-<!-- 🔥 IMPORTANTE: só usa script.js -->
 <script src="script.js"></script>
-
-<!-- PWA -->
-<script>
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
-}
-</script>
 
 </body>
 </html>
