@@ -1,109 +1,93 @@
-const URL = "https://opensheet.elk.sh/1Li9vCzsQploeT-CaCgKTx_Q3Kk5pj2v8MH6H94ZmmNw/Respostas ao formulário 1"; // 🔥 COLOCA SUA URL JSON AQUI
-
-let grafico;
-
-// 🔧 LIMPA CHAVES (remove espaços bugados)
-function limparObjeto(obj) {
-  let novo = {};
-  for (let chave in obj) {
-    novo[chave.trim()] = obj[chave];
-  }
-  return novo;
-}
-
-// 🚀 CARREGAR DADOS
 async function carregarDados() {
-  try {
-    const res = await fetch(URL + "?nocache=" + Date.now());
-    let dados = await res.json();
 
-    // 🔥 LIMPAR E FILTRAR
-    dados = dados.map(limparObjeto);
-    dados = dados.filter(item => item.Placa);
+  const url = "https://docs.google.com/spreadsheets/d/1Li9vCzsQploeT-CaCgKTx_Q3Kk5pj2v8MH6H94ZmmNw/export?format=csv";
 
-    console.log("Dados carregados:", dados);
+  const res = await fetch(url);
+  const texto = await res.text();
 
-    // 🎯 PEGAR PLACA SELECIONADA
-    const placa = document.getElementById("placaSelect").value;
+  const linhas = texto.split("\n").slice(1);
 
-    if (!placa) return;
+  const select = document.getElementById("placaSelect");
+  const historico = document.getElementById("historico");
 
-    let filtrados = dados.filter(item => item.Placa === placa);
+  let dados = [];
 
-    if (filtrados.length === 0) return;
+  linhas.forEach(linha => {
+    const col = linha.split(",");
 
-    // 🧠 ORDENAR POR DATA
-    filtrados.sort((a, b) => {
-      return new Date(b.Data) - new Date(a.Data);
+    if (col.length < 5) return;
+
+    dados.push({
+      data: col[0],
+      motorista: col[1],
+      placa: col[2],
+      tipo: col[3],
+      km: parseFloat(col[4]),
+      jornada: col[5]
     });
-
-    // 📌 ÚLTIMO REGISTRO
-    let ultimo = filtrados[0];
-
-    document.getElementById("motorista").innerText = ultimo.Motorista || "-";
-    document.getElementById("km").innerText = ultimo["Km atual"] || "-";
-    document.getElementById("jornada").innerText = ultimo.Jornada || "-";
-    document.getElementById("veiculo").innerText = ultimo.Veículo || "-";
-
-    // 📜 HISTÓRICO
-    let lista = document.getElementById("historico");
-    lista.innerHTML = "";
-
-    filtrados.slice(0, 10).forEach(item => {
-      let li = document.createElement("li");
-
-      let data = item.Data || "-";
-      let motorista = item.Motorista || "-";
-      let km = item["Km atual"] || "-";
-
-      li.textContent = `${data} - ${motorista} - KM: ${km}`;
-      lista.appendChild(li);
-    });
-
-    // 📊 GRÁFICO
-    let labels = filtrados.map(item => item.Data).reverse();
-    let kms = filtrados.map(item => Number(item["Km atual"]) || 0).reverse();
-
-    desenharGrafico(labels, kms);
-
-  } catch (erro) {
-    console.error("Erro ao carregar dados:", erro);
-  }
-}
-
-// 📊 FUNÇÃO DO GRÁFICO
-function desenharGrafico(labels, dados) {
-  const ctx = document.getElementById("graficoKm").getContext("2d");
-
-  if (grafico) {
-    grafico.destroy();
-  }
-
-  grafico = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: labels,
-      datasets: [{
-        label: "KM",
-        data: dados,
-        fill: false,
-        tension: 0.3
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          display: true
-        }
-      }
-    }
   });
+
+  // placas únicas
+  const placas = [...new Set(dados.map(d => d.placa))];
+
+  placas.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p;
+    opt.textContent = p;
+    select.appendChild(opt);
+  });
+
+  select.addEventListener("change", () => {
+
+    const placa = select.value;
+
+    const filtrado = dados.filter(d => d.placa === placa);
+
+    if (filtrado.length === 0) return;
+
+    // último registro
+    const ultimo = filtrado[filtrado.length - 1];
+
+    document.getElementById("motorista").textContent = ultimo.motorista;
+    document.getElementById("km").textContent = ultimo.km;
+    document.getElementById("jornada").textContent = ultimo.jornada;
+    document.getElementById("veiculo").textContent = ultimo.tipo;
+
+    // histórico
+    historico.innerHTML = "";
+
+    filtrado.slice(-5).forEach(d => {
+      const li = document.createElement("li");
+      li.textContent = `${d.data} - ${d.motorista} - KM: ${d.km}`;
+      historico.appendChild(li);
+    });
+
+    // gráfico
+    const labels = filtrado.map(d => d.data);
+    const kms = filtrado.map(d => d.km);
+
+    const ctx = document.getElementById("graficoKm");
+
+    if (window.grafico) {
+      window.grafico.destroy();
+    }
+
+    window.grafico = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [{
+          label: "KM",
+          data: kms,
+          borderWidth: 2,
+          fill: false,
+          tension: 0.3
+        }]
+      }
+    });
+
+  });
+
 }
 
-// 🔄 AO TROCAR PLACA
-document.getElementById("placaSelect").addEventListener("change", carregarDados);
-
-// 🚀 INICIALIZAR
 carregarDados();
-console.log("Script funcionando 🔥");
