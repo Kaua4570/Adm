@@ -11,20 +11,22 @@ fetch(url)
     carregarPlacas();
   });
 
-// 🔥 Corrige nome das colunas automaticamente
+// 🔥 Função ULTRA inteligente (ignora espaço, maiúscula, erro de nome)
 function pegar(item, campo) {
   const chave = Object.keys(item).find(k =>
-    k.toLowerCase().trim() === campo.toLowerCase().trim()
+    k.toLowerCase().replace(/\s+/g, "") === campo.toLowerCase().replace(/\s+/g, "")
   );
   return chave ? item[chave] : "-";
 }
 
-// 🔥 Normaliza texto
+// 🔥 Normaliza texto (pra comparar placa certinho)
 function normalizar(texto) {
-  return texto ? texto.toString().trim().toLowerCase() : "";
+  return texto
+    ? texto.toString().trim().toLowerCase().replace(/\s+/g, "")
+    : "";
 }
 
-// 🔥 Carrega placas
+// 🔥 Carrega placas no select
 function carregarPlacas() {
   const select = document.getElementById("placaSelect");
 
@@ -41,7 +43,7 @@ function carregarPlacas() {
   });
 }
 
-// 🔥 Selecionar placa
+// 🔥 Quando seleciona placa
 function selecionarPlaca() {
   const placaSelecionada = normalizar(
     document.getElementById("placaSelect").value
@@ -53,17 +55,20 @@ function selecionarPlaca() {
 
   if (filtrados.length === 0) return;
 
+  // 🔥 Ordena pelo mais recente
   filtrados.sort((a, b) =>
     new Date(pegar(b, "Carimbo de data/hora")) - new Date(pegar(a, "Carimbo de data/hora"))
   );
 
   const ultimo = filtrados[0];
 
+  // 🔥 Preenche dados
   document.getElementById("motorista").textContent = pegar(ultimo, "Motorista");
   document.getElementById("km").textContent = pegar(ultimo, "Km atual");
   document.getElementById("jornada").textContent = pegar(ultimo, "Jornada");
   document.getElementById("veiculo").textContent = pegar(ultimo, "Veículo");
 
+  // 🔥 Histórico (sem undefined)
   const historico = document.getElementById("historico");
 
   historico.innerHTML = filtrados.slice(0, 10).map(item => `
@@ -73,5 +78,5 @@ function selecionarPlaca() {
   `).join("");
 }
 
-// 🔥 ATIVA o select (ESSENCIAL)
+// 🔥 Ativa o select
 document.getElementById("placaSelect").addEventListener("change", selecionarPlaca);
