@@ -2,15 +2,19 @@ const url = "https://opensheet.elk.sh/1Li9vCzsQploeT-CaCgKTx_Q3Kk5pj2v8MH6H94Zmm
 
 let dados = [];
 
-// 🔥 Busca os dados
+// 🔥 Buscar dados
 fetch(url)
   .then(res => res.json())
   .then(res => {
-    dados = res;
+    // 🔥 Remove linhas vazias
+    dados = res.filter(item => Object.keys(item).length > 0);
+
+    console.log("DADOS:", dados);
+
     carregarPlacas();
   });
 
-// 🔥 Corrige nome das colunas (ignora espaço, maiúscula etc)
+// 🔥 Corrige nomes das colunas (REMOVE ESPAÇOS)
 function pegar(item, campo) {
   const chave = Object.keys(item).find(k =>
     k.trim().toLowerCase() === campo.trim().toLowerCase()
@@ -41,7 +45,7 @@ function carregarPlacas() {
   });
 }
 
-// 🔥 Seleciona placa
+// 🔥 Selecionar placa
 function selecionarPlaca() {
   const placaSelecionada = normalizar(
     document.getElementById("placaSelect").value
@@ -53,7 +57,7 @@ function selecionarPlaca() {
 
   if (filtrados.length === 0) return;
 
-  // 🔥 Ordena por data
+  // 🔥 Ordena por data/hora
   filtrados.sort((a, b) =>
     new Date(pegar(b, "Carimbo de data/hora")) -
     new Date(pegar(a, "Carimbo de data/hora"))
@@ -61,7 +65,7 @@ function selecionarPlaca() {
 
   const ultimo = filtrados[0];
 
-  // 🔥 Preenche dados
+  // 🔥 Dados principais
   document.getElementById("motorista").textContent = pegar(ultimo, "Motorista");
   document.getElementById("km").textContent = pegar(ultimo, "Km atual");
   document.getElementById("jornada").textContent = pegar(ultimo, "Jornada");
@@ -75,3 +79,4 @@ function selecionarPlaca() {
       ${pegar(item, "Data")} - ${pegar(item, "Motorista")} - KM: ${pegar(item, "Km atual")}
     </li>
   `).join("");
+}
