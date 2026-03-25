@@ -2,16 +2,16 @@ const url = "https://script.google.com/macros/s/AKfycbwjZubw3RuIdjemAxw7xINiJmv9
 
 let dados = [];
 
-// 🔥 Busca os dados da planilha
+// 🔥 Busca os dados
 fetch(url)
   .then(res => res.json())
   .then(res => {
     dados = res.data || res;
-    console.log("DADOS:", dados); // debug
+    console.log("DADOS:", dados);
     carregarPlacas();
   });
 
-// 🔥 Função inteligente (corrige nome de coluna automaticamente)
+// 🔥 Corrige nome das colunas automaticamente
 function pegar(item, campo) {
   const chave = Object.keys(item).find(k =>
     k.toLowerCase().trim() === campo.toLowerCase().trim()
@@ -19,12 +19,12 @@ function pegar(item, campo) {
   return chave ? item[chave] : "-";
 }
 
-// 🔥 Normaliza texto (remove erro de maiúsculo/espaço)
+// 🔥 Normaliza texto
 function normalizar(texto) {
   return texto ? texto.toString().trim().toLowerCase() : "";
 }
 
-// 🔥 Carrega placas no select
+// 🔥 Carrega placas
 function carregarPlacas() {
   const select = document.getElementById("placaSelect");
 
@@ -41,7 +41,7 @@ function carregarPlacas() {
   });
 }
 
-// 🔥 Quando seleciona placa
+// 🔥 Selecionar placa
 function selecionarPlaca() {
   const placaSelecionada = normalizar(
     document.getElementById("placaSelect").value
@@ -53,25 +53,25 @@ function selecionarPlaca() {
 
   if (filtrados.length === 0) return;
 
-  // 🔥 Ordena pelo mais recente (data + hora)
-  filtrados.sort((a, b) => {
-    return new Date(pegar(b, "Carimbo de data/hora")) - new Date(pegar(a, "Carimbo de data/hora"));
-  });
+  filtrados.sort((a, b) =>
+    new Date(pegar(b, "Carimbo de data/hora")) - new Date(pegar(a, "Carimbo de data/hora"))
+  );
 
   const ultimo = filtrados[0];
 
-  // 🔥 Preenche os dados principais
   document.getElementById("motorista").textContent = pegar(ultimo, "Motorista");
   document.getElementById("km").textContent = pegar(ultimo, "Km atual");
   document.getElementById("jornada").textContent = pegar(ultimo, "Jornada");
   document.getElementById("veiculo").textContent = pegar(ultimo, "Veículo");
 
-  // 🔥 Histórico (sem undefined)
   const historico = document.getElementById("historico");
 
-  historico.innerHTML = filtrados.map(item => `
+  historico.innerHTML = filtrados.slice(0, 10).map(item => `
     <li>
       ${pegar(item, "Data")} - ${pegar(item, "Motorista")} - KM: ${pegar(item, "Km atual")}
     </li>
   `).join("");
 }
+
+// 🔥 ATIVA o select (ESSENCIAL)
+document.getElementById("placaSelect").addEventListener("change", selecionarPlaca);
