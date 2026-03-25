@@ -1,95 +1,80 @@
-/* RESET */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-/* BODY */
 body {
-  font-family: Arial, sans-serif;
-  background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url("fundo.png");
+  font-family: Arial;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+
+  background: url("fundo.png") no-repeat center center fixed;
   background-size: cover;
-  background-position: center;
-  color: #fff;
-  text-align: center;
-  min-height: 100vh;
 }
 
-/* TÍTULO */
-h1 {
-  margin-top: 30px;
-  font-size: 28px;
+/* 🔥 camada escura por cima do fundo */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: -1;
 }
 
-/* SELECT */
-select {
-  width: 80%;
-  max-width: 400px;
-  padding: 12px;
-  border-radius: 12px;
-  border: none;
-  font-size: 16px;
-  margin: 20px auto;
-  display: block;
-}
-
-/* CARDS */
-.card {
-  width: 90%;
-  max-width: 500px;
-  margin: 15px auto;
+/* container principal */
+.container {
+  width: 100%;
+  max-width: 420px;
   padding: 20px;
-  background: rgba(0,0,0,0.85);
+  color: white;
+}
+
+/* título */
+h1, h2 {
+  text-align: center;
+  color: #fff;
+}
+
+/* select e inputs */
+select, input {
+  width: 100%;
+  padding: 14px;
+  margin: 10px 0;
+  border-radius: 10px;
+  border: none;
+  background: #1e1e1e;
+  color: #fff;
+}
+
+/* 🔥 CARDS ESCUROS (corrige seu problema) */
+.card {
+  background: #121212; /* sólido, não transparente */
   border-radius: 15px;
-  text-align: left;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  padding: 15px;
+  margin-top: 15px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
 
-/* TEXTO */
-.card p {
-  margin: 8px 0;
-  font-size: 16px;
-}
-
-.card h3 {
-  margin-bottom: 10px;
-}
-
-/* HISTÓRICO */
-#historico {
+/* histórico */
+ul {
   padding-left: 20px;
 }
 
-#historico li {
-  margin-bottom: 6px;
+li {
+  margin-bottom: 8px;
+  color: #ddd;
 }
 
-/* 🔥 GRÁFICO (ESSENCIAL) */
+/* gráfico container */
 canvas {
-  width: 100% !important;
-  height: 300px !important;
-  margin-top: 10px;
-}
-
-/* OPCIONAL - deixa mais bonito */
-.card canvas {
-  background: #1e1e1e;
+  background: #1a1a1a;
   border-radius: 10px;
   padding: 10px;
 }
 
-/* RESPONSIVO */
-@media (max-width: 600px) {
-  h1 {
-    font-size: 24px;
-  }
-
-  .card {
-    padding: 15px;
-  }
-
-  select {
-    width: 90%;
-  }
+/* botão (se tiver) */
+button {
+  width: 100%;
+  padding: 14px;
+  background: #25D366;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: bold;
 }
