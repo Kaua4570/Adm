@@ -1,7 +1,7 @@
 body {
   margin: 0;
   font-family: Arial;
-  background: linear-gradient(135deg, #1e1e1e, #2c2c2c);
+  background: #1e1e1e;
   color: white;
   text-align: center;
 }
@@ -10,18 +10,12 @@ h1 {
   margin: 20px;
 }
 
-.filtros {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 20px;
-}
-
-select, input {
+select {
+  width: 80%;
   padding: 12px;
   border-radius: 10px;
-  border: none;
   font-size: 16px;
+  margin-top: 10px;
 }
 
 .card {
@@ -30,12 +24,4 @@ select, input {
   padding: 20px;
   border-radius: 15px;
   text-align: left;
-}
-
-.destaque {
-  border-left: 5px solid red;
-}
-
-li {
-  margin-bottom: 8px;
 }
