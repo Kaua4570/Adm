@@ -6,33 +6,34 @@
   <title>Painel ADM</title>
 
   <link rel="stylesheet" href="style.css">
+
+  <!-- 🔥 gráfico -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
 
 <h1>Painel ADM</h1>
 
-<div class="filtros">
-  <select id="placaSelect">
-    <option value="">Todas as placas</option>
-  </select>
+<select id="placaSelect">
+  <option value="">Selecione a placa</option>
+</select>
 
-  <input type="text" id="buscaMotorista" placeholder="Buscar motorista">
-
-  <input type="date" id="filtroData">
-</div>
-
-<div class="card destaque">
-  <h3>Último Registro</h3>
-  <p><b>Motorista:</b> <span id="motorista">-</span></p>
-  <p><b>KM:</b> <span id="km">-</span></p>
+<div class="card">
+  <p><b>Último motorista:</b> <span id="motorista">-</span></p>
+  <p><b>KM atual:</b> <span id="km">-</span></p>
   <p><b>Jornada:</b> <span id="jornada">-</span></p>
   <p><b>Veículo:</b> <span id="veiculo">-</span></p>
 </div>
 
 <div class="card">
-  <h3>Histórico</h3>
+  <h3>Histórico:</h3>
   <ul id="historico"></ul>
+</div>
+
+<div class="card">
+  <h3>Gráfico de KM</h3>
+  <canvas id="graficoKm"></canvas>
 </div>
 
 <script src="script.js"></script>
