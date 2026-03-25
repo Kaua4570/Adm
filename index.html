@@ -43,7 +43,7 @@
 
 <h1>Painel ADM</h1>
 
-<select id="placaSelect">
+<select id="placaSelect" onchange="selecionarPlaca()">
   <option value="">Selecione a placa</option>
 </select>
 
@@ -59,56 +59,11 @@
   <ul id="historico"></ul>
 </div>
 
+<!-- 🔥 IMPORTANTE: só usa script.js -->
+<script src="script.js"></script>
+
+<!-- PWA -->
 <script>
-const URL = "https://opensheet.elk.sh/1Li9vCzsQploeT-CaCgKTx_Q3Kk5pj2v8MH6H94ZmmNw/Respostas ao formulário 1";
-
-let dados = [];
-
-fetch(URL)
-  .then(res => res.json())
-  .then(json => {
-    dados = json;
-
-    const placas = [...new Set(dados.map(d => d.Placa))];
-
-    const select = document.getElementById("placaSelect");
-
-    placas.forEach(p => {
-      const op = document.createElement("option");
-      op.value = p;
-      op.textContent = p;
-      select.appendChild(op);
-    });
-  });
-
-document.getElementById("placaSelect").addEventListener("change", function() {
-  const placa = this.value;
-
-  const filtrado = dados.filter(d => d.Placa === placa);
-
-  if (filtrado.length === 0) return;
-
-  // ordena por data mais recente
-  filtrado.sort((a,b) => new Date(b["Carimbo de data/hora"]) - new Date(a["Carimbo de data/hora"]));
-
-  const ultimo = filtrado[0];
-
-  document.getElementById("motorista").textContent = ultimo.Motorista;
-  document.getElementById("km").textContent = ultimo["Km atual"];
-  document.getElementById("jornada").textContent = ultimo.Jornada;
-  document.getElementById("veiculo").textContent = ultimo.Veículo;
-
-  const lista = document.getElementById("historico");
-  lista.innerHTML = "";
-
-  filtrado.slice(0,10).forEach(item => {
-    const li = document.createElement("li");
-    li.textContent = `${item.Data} - ${item.Motorista} - KM: ${item["Km atual"]}`;
-    lista.appendChild(li);
-  });
-});
-
-// PWA (app)
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
 }
