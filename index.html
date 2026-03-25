@@ -1,17 +1,65 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel ADM</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link rel="stylesheet" href="style.css">
+<title>Painel ADM</title>
 
-  <!-- 🔥 gráfico -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body {
+  font-family: Arial;
+  margin: 0;
+  background: #111;
+  color: white;
+  display: flex;
+  justify-content: center;
+}
+
+.container {
+  width: 100%;
+  max-width: 420px;
+  padding: 20px;
+}
+
+h1 {
+  text-align: center;
+}
+
+select {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  border: none;
+}
+
+.card {
+  background: #1c1c1c;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 15px;
+}
+
+ul {
+  padding-left: 20px;
+}
+
+canvas {
+  background: #fff;
+  border-radius: 10px;
+  padding: 10px;
+}
+</style>
+
 </head>
 
 <body>
+
+<div class="container">
 
 <h1>Painel ADM</h1>
 
@@ -34,6 +82,8 @@
 <div class="card">
   <h3>Gráfico de KM</h3>
   <canvas id="graficoKm"></canvas>
+</div>
+
 </div>
 
 <script src="script.js"></script>
