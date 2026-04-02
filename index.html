@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Murici — Painel ADM</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#e8173a">
+<meta name="mobile-web-app-capable" content="yes">
+
+<!-- iOS -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Murici">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<!-- Android / SEO -->
+<meta name="description" content="Painel administrativo de frota Murici">
+<meta name="application-name" content="Murici ADM">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700;900&family=Barlow+Condensed:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+/* ── TOKENS ─────────────────────────────────────────────── */
+:root {
+  --bg:       #0a0a0c;
+  --surface:  #111114;
+  --card:     #17171b;
+  --card2:    #1c1c21;
+  --border:   #2a2a32;
+  --red:      #e8173a;
+  --red2:     #ff3d5e;
+  --red-glow: rgba(232,23,58,.18);
+  --text:     #f0f0f5;
+  --muted:    #55556a;
+  --font:     'Barlow', sans-serif;
+  --fontc:    'Barlow Condensed', sans-serif;
+  --r:        16px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  top: -300px; right: -300px;
+  width: 700px; height: 700px;
+  background: radial-gradient(circle, rgba(232,23,58,.1) 0%, transparent 65%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.app {
+  position: relative;
+  z-index: 1;
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 0 0 80px;
+}
+
+/* ── HEADER ─────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: rgba(10,10,12,.93);
+  backdrop-filter: blur(14px);
+  z-index: 100;
+}
+
+.logo { display: flex; align-items: center; gap: 10px; }
+
+.logo-badge {
+  width: 36px; height: 36px;
+  background: var(--red);
+  border-radius: 8px;
+  display: grid; place-items: center;
+  font-family: var(--fontc);
+  font-weight: 900;
+  font-size: 1.15rem;
+  color: #fff;
+  box-shadow: 0 0 18px rgba(232,23,58,.5);
+}
+
+.logo-name {
+  font-family: var(--fontc);
+  font-weight: 900;
+  font-size: 1.3rem;
+  letter-spacing: .5px;
+}
+.logo-name span { color: var(--red); }
+
+.status-pill {
+  display: flex; align-items: center; gap: 6px;
+  padding: 5px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: .68rem;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); transition: .3s; }
+.dot.on { background: #22d373; box-shadow: 0 0 8px #22d373; }
+
+/* ── BODY ───────────────────────────────────────────────── */
+.body { padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+
+/* ── SELECT ROW ─────────────────────────────────────────── */
+.row-select { display: flex; gap: 10px; }
+
+.sel-wrap { flex: 1; position: relative; }
+.sel-wrap::after {
+  content: '▾';
+  position: absolute; right: 14px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--red); pointer-events: none; font-size: .8rem;
+}
+
+select {
+  width: 100%;
+  padding: 14px 36px 14px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--text);
+  font-family: var(--fontc);
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: .5px;
+  appearance: none;
+  cursor: pointer; outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+select:focus, select:hover { border-color: var(--red); box-shadow: 0 0 0 3px var(--red-glow); }
+
+.btn {
+  padding: 14px 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  color: var(--text);
+  font-family: var(--font);
+  font-weight: 700; font-size: .85rem;
+  cursor: pointer;
+  transition: .2s;
+  display: flex; align-items: center; gap: 7px;
+  white-space: nowrap;
+}
+.btn:hover { border-color: var(--red); color: var(--red); box-shadow: 0 0 0 3px var(--red-glow); }
+.btn.spin svg { animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── STATES ─────────────────────────────────────────────── */
+.state { display: none; text-align: center; padding: 50px 20px; color: var(--muted); font-size: .85rem; font-weight: 600; }
+.state.show { display: block; }
+.state .ico { font-size: 2.2rem; margin-bottom: 10px; }
+
+/* ── ALERT ──────────────────────────────────────────────── */
+.alert { display: none; padding: 13px 16px; border-radius: var(--r); border: 1px solid rgba(255,140,0,.3); background: rgba(255,140,0,.07); color: #ffb347; font-size: .84rem; font-weight: 600; gap: 10px; align-items: center; }
+.alert.show { display: flex; animation: up .3s ease forwards; }
+
+/* ── KPI CARDS ──────────────────────────────────────────── */
+#kpis { display: flex; flex-direction: column; gap: 10px; }
+
+.kpi-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  opacity: 0; transform: translateY(12px);
+  transition: border-color .2s;
+}
+.kpi-card:hover { border-color: #333340; }
+.kpi-card.in { animation: up .35s ease forwards; }
+@keyframes up { to { opacity: 1; transform: none; } }
+
+.kpi-label { font-size: .63rem; font-weight: 700; letter-spacing: 1.8px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.kpi-value { font-family: var(--fontc); font-weight: 900; font-size: 2rem; line-height: 1; color: var(--text); }
+.kpi-value.red  { color: var(--red2); }
+.kpi-value.blue { color: #3d9eff; }
+.kpi-icon { font-size: 2rem; opacity: .15; }
+
+/* ── SECTION LABEL ──────────────────────────────────────── */
+.sec-label {
+  font-size: .62rem; font-weight: 700; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--muted);
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 10px;
+}
+.sec-label::before { content: ''; display: inline-block; width: 3px; height: 11px; background: var(--red); border-radius: 2px; }
+
+/* ── PHOTOS ─────────────────────────────────────────────── */
+.photo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.photo-item {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  aspect-ratio: 4/3;
+  background: var(--card);
+  position: relative;
+  cursor: pointer;
+  transition: border-color .2s, transform .2s;
+}
+.photo-item:hover { border-color: var(--red); transform: scale(1.02); box-shadow: 0 0 16px var(--red-glow); }
+
+.photo-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.photo-err {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 6px; color: var(--muted);
+  font-size: .7rem; font-weight: 600;
+}
+.photo-err span { font-size: 1.6rem; }
+
+.photo-empty {
+  grid-column: 1/-1;
+  text-align: center; padding: 28px;
+  color: var(--muted); font-size: .8rem; font-weight: 600;
+  border: 1px dashed var(--border); border-radius: 12px;
+}
+
+/* LIGHTBOX */
+.lightbox {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.93);
+  z-index: 999; align-items: center; justify-content: center; padding: 20px;
+}
+.lightbox.show { display: flex; }
+.lightbox img { max-width: 100%; max-height: 90vh; border-radius: 12px; box-shadow: 0 0 60px rgba(0,0,0,.8); }
+.lb-close {
+  position: absolute; top: 20px; right: 20px;
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--card); border: 1px solid var(--border);
+  color: var(--text); font-size: 1.2rem;
+  cursor: pointer; display: grid; place-items: center;
+}
+
+/* ── CHART ──────────────────────────────────────────────── */
+.chart-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; }
+.chart-wrap { position: relative; height: 200px; margin-top: 4px; }
+
+/* ── HISTORY ────────────────────────────────────────────── */
+.hist-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; }
+.hist-list { list-style: none; display: flex; flex-direction: column; gap: 7px; margin-top: 4px; max-height: 280px; overflow-y: auto; padding-right: 4px; }
+.hist-list::-webkit-scrollbar { width: 3px; }
+.hist-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.hist-item { background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; font-size: .82rem; gap: 8px; transition: border-color .2s; }
+.hist-item:hover { border-color: #333340; }
+.hist-item.top { border-color: rgba(232,23,58,.4); background: rgba(232,23,58,.04); }
+.h-name { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.h-date { font-size: .68rem; color: var(--muted); white-space: nowrap; }
+.h-km   { font-family: var(--fontc); font-size: .82rem; font-weight: 700; color: var(--red2); white-space: nowrap; }
+
+/* ── STATS ──────────────────────────────────────────────── */
+.stats-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 20px; }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+.stat-box { background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.s-label { font-size: .6rem; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.s-val   { font-family: var(--fontc); font-weight: 900; font-size: 1.2rem; color: var(--text); }
+
+/* ── FOOTER ─────────────────────────────────────────────── */
+.footer { text-align: center; padding: 30px 20px 0; font-size: .65rem; font-weight: 600; letter-spacing: .5px; color: var(--muted); text-transform: uppercase; border-top: 1px solid var(--border); }
+
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-badge">M</div>
+      <div class="logo-name">Murici <span>ADM</span></div>
+    </div>
+    <div class="status-pill">
+      <div class="dot" id="dot"></div>
+      <span id="statusTxt">aguardando</span>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <!-- SELECT -->
+    <div class="row-select">
+      <div class="sel-wrap">
+        <select id="placaSelect" onchange="selecionarPlaca()">
+          <option value="">Selecione a placa</option>
+        </select>
+      </div>
+      <button class="btn" id="btnRef" onclick="recarregar()">
+        <svg id="refIco" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M23 4v6h-6"/><path d="M1 20v-6h6"/>
+          <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+        </svg>
+        Atualizar
+      </button>
+    </div>
+
+    <!-- STATES -->
+    <div class="state" id="stLoad"><div class="ico">⏳</div>Carregando dados...</div>
+    <div class="state" id="stErr"><div class="ico">⚠️</div>Erro ao carregar. Verifique a conexão.</div>
+
+    <!-- ALERT -->
+    <div class="alert" id="alertEl">⚠️ <span id="alertMsg"></span></div>
+
+    <!-- KPI CARDS -->
+    <div id="kpis" class="hidden">
+      <div class="kpi-card" id="kMotorista">
+        <div><div class="kpi-label">Último Motorista</div><div class="kpi-value" id="vMotorista">—</div></div>
+        <div class="kpi-icon">👤</div>
+      </div>
+      <div class="kpi-card" id="kKm">
+        <div><div class="kpi-label">KM Atual</div><div class="kpi-value red" id="vKm">—</div></div>
+        <div class="kpi-icon">📍</div>
+      </div>
+      <div class="kpi-card" id="kJornada">
+        <div><div class="kpi-label">Jornada</div><div class="kpi-value blue" id="vJornada">—</div></div>
+        <div class="kpi-icon">🛣️</div>
+      </div>
+      <div class="kpi-card" id="kVeiculo">
+        <div><div class="kpi-label">Veículo</div><div class="kpi-value" id="vVeiculo">—</div></div>
+        <div class="kpi-icon">🚛</div>
+      </div>
+    </div>
+
+    <!-- FOTOS DO VEÍCULO -->
+    <div id="photoSection" class="hidden">
+      <div class="sec-label">Fotos do Veículo</div>
+      <div class="photo-grid" id="photoGrid"></div>
+    </div>
+
+    <!-- GRÁFICO -->
+    <div class="chart-card hidden" id="chartCard">
+      <div class="sec-label">Evolução de KM</div>
+      <div class="chart-wrap"><canvas id="graficoKm"></canvas></div>
+    </div>
+
+    <!-- HISTÓRICO -->
+    <div class="hist-card hidden" id="histCard">
+      <div class="sec-label">Histórico de Registros</div>
+      <ul class="hist-list" id="historico"></ul>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-card hidden" id="statsCard">
+      <div class="sec-label">Estatísticas</div>
+      <div class="stats-grid" id="statsGrid"></div>
+    </div>
+
+    <div class="footer hidden" id="footerEl">
+      Murici &nbsp;·&nbsp; Painel Administrativo &nbsp;·&nbsp; Dados via Google Sheets
+    </div>
+
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="fecharLightbox()">
+  <button class="lb-close" onclick="fecharLightbox()">✕</button>
+  <img id="lbImg" src="" alt="">
+</div>
+
+<script>
+const SHEET = "https://opensheet.elk.sh/1Li9vCzsQploeT-CaCgKTx_Q3Kk5pj2v8MH6H94ZmmNw/Respostas ao formulário 1";
+let dados = [], grafico = null;
+
+const $ = id => document.getElementById(id);
+
+function pegar(item, campo) {
+  const k = Object.keys(item).find(k => k.trim().toLowerCase() === campo.trim().toLowerCase());
+  return k ? item[k] : "";
+}
+
+// Pega valor pelo índice da coluna (0-based)
+function pegarIdx(item, idx) {
+  const keys = Object.keys(item);
+  return keys[idx] !== undefined ? item[keys[idx]] : "";
+}
+
+function norm(t) { return t ? t.toString().trim().toLowerCase() : ""; }
+function num(v)  { let n = parseFloat(String(v).replace(',','.')); return isNaN(n) ? 0 : n; }
+function fmtKm(v){ return num(v).toLocaleString('pt-BR') + ' km'; }
+function show(id){ $(id).classList.remove('hidden'); }
+function hide(id){ $(id).classList.add('hidden'); }
+
+function setStatus(on) {
+  $('dot').className = 'dot' + (on ? ' on' : '');
+  $('statusTxt').textContent = on ? 'online' : 'offline';
+}
+
+function carregarDados(force = false) {
+  $('stLoad').classList.add('show');
+  $('stErr').classList.remove('show');
+  $('btnRef').classList.add('spin');
+  const url = force ? SHEET + '?t=' + Date.now() : SHEET;
+  fetch(url)
+    .then(r => { if (!r.ok) throw r; return r.json(); })
+    .then(res => {
+      dados = res.filter(i => Object.keys(i).length > 0);
+      setStatus(true);
+      $('stLoad').classList.remove('show');
+      carregarPlacas();
+    })
+    .catch(() => {
+      setStatus(false);
+      $('stLoad').classList.remove('show');
+      $('stErr').classList.add('show');
+    })
+    .finally(() => $('btnRef').classList.remove('spin'));
+}
+
+function recarregar() {
+  const p = $('placaSelect').value;
+  carregarDados(true);
+  setTimeout(() => { if(p){ $('placaSelect').value = p; selecionarPlaca(); } }, 1400);
+}
+
+function carregarPlacas() {
+  const sel = $('placaSelect');
+  while (sel.options.length > 1) sel.remove(1);
+  [...new Set(dados.map(i => norm(pegar(i,"Placa"))).filter(Boolean))].sort()
+    .forEach(p => {
+      const o = document.createElement('option');
+      o.value = p; o.textContent = p.toUpperCase();
+      sel.appendChild(o);
+    });
+}
+
+function selecionarPlaca() {
+  const placa = norm($('placaSelect').value);
+  if (!placa) return;
+
+  let lista = dados.filter(i => norm(pegar(i,"Placa")) === placa).reverse();
+  if (!lista.length) return;
+  const ult = lista[0];
+
+  // KPIs
+  $('vMotorista').textContent = pegar(ult,"Motorista") || "—";
+  $('vKm').textContent        = fmtKm(pegar(ult,"Km atual"));
+  $('vJornada').textContent   = pegar(ult,"Jornada")   || "—";
+  $('vVeiculo').textContent   = pegar(ult,"Veículo")   || "—";
+
+  // Mostrar e animar KPIs
+  show('kpis');
+  ['kMotorista','kKm','kJornada','kVeiculo'].forEach((id,i) => {
+    const el = $(id);
+    el.classList.remove('in');
+    setTimeout(() => el.classList.add('in'), i * 80);
+  });
+
+  // Alert jornada longa
+  const jStr = pegar(ult,"Jornada");
+  const hm = jStr.match(/(\d+)/);
+  if (hm && parseInt(hm[1]) >= 8) {
+    $('alertMsg').textContent = `Motorista ${pegar(ult,"Motorista")} em jornada de ${jStr}.`;
+    $('alertEl').classList.add('show');
+  } else {
+    $('alertEl').classList.remove('show');
+  }
+
+  // Fotos
+  renderFotos(ult);
+
+  // Gráfico
+  show('chartCard');
+  const graf = [...lista].reverse().slice(-20);
+  atualizarGrafico(
+    graf.map(i => pegar(i,"Data")),
+    graf.map(i => num(pegar(i,"Km atual")))
+  );
+
+  // Histórico
+  show('histCard');
+  $('historico').innerHTML = lista.slice(0,15).map((it,idx) => `
+    <li class="hist-item${idx===0?' top':''}">
+      <span class="h-name">${pegar(it,"Motorista")||"—"}</span>
+      <span class="h-date">${pegar(it,"Data")||"—"}</span>
+      <span class="h-km">${fmtKm(pegar(it,"Km atual"))}</span>
+    </li>`).join('');
+
+  // Estatísticas
+  show('statsCard');
+  const kms = lista.map(i => num(pegar(i,"Km atual"))).filter(n=>n>0);
+  const mot = [...new Set(lista.map(i=>pegar(i,"Motorista")).filter(Boolean))];
+  $('statsGrid').innerHTML = [
+    ['Registros',   lista.length],
+    ['KM Máximo',   fmtKm(kms.length ? Math.max(...kms) : 0)],
+    ['KM Mínimo',   fmtKm(kms.length ? Math.min(...kms) : 0)],
+    ['Variação',    fmtKm(kms.length ? Math.abs(kms[kms.length-1]-kms[0]) : 0)],
+    ['Motoristas',  mot.length],
+    ['Último reg.', pegar(ult,"Data")||"—"],
+  ].map(([l,v]) => `<div class="stat-box"><div class="s-label">${l}</div><div class="s-val">${v}</div></div>`).join('');
+
+  show('footerEl');
+}
+
+/* ── FOTOS DO VEÍCULO ────────────────────────────────── */
+function renderFotos(item) {
+  // Tenta pelos nomes "Foto 1"..."Foto 4"; se não achar, usa colunas I,J,K,L (índices 8,9,10,11)
+  const fotos = [];
+  for (let n = 1; n <= 4; n++) {
+    let val = pegar(item, `Foto ${n}`)
+           || pegar(item, `foto ${n}`)
+           || pegar(item, `Foto${n}`)
+           || pegar(item, `foto_${n}`)
+           || pegarIdx(item, 7 + n); // índice 8=I, 9=J, 10=K, 11=L
+    fotos.push(val ? String(val).trim() : '');
+  }
+
+  show('photoSection');
+  const temFoto = fotos.some(f => f.length > 0);
+
+  if (!temFoto) {
+    $('photoGrid').innerHTML = `<div class="photo-empty">📷 Nenhuma foto registrada para este veículo</div>`;
+    return;
+  }
+
+  $('photoGrid').innerHTML = fotos.map((url, i) => {
+    if (!url) return `<div class="photo-item"><div class="photo-err"><span>📷</span>Sem foto</div></div>`;
+    const src = converterDriveUrl(url);
+    return `
+      <div class="photo-item" onclick="abrirLightbox('${src.replace(/'/g,"\\'")}')">
+        <img src="${src}" alt="Foto ${i+1}"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="photo-err" style="display:none"><span>⚠️</span>Erro ao carregar</div>
+      </div>`;
+  }).join('');
+}
+
+// Converte link Google Drive para thumbnail direto
+function converterDriveUrl(url) {
+  // https://drive.google.com/file/d/FILE_ID/view
+  let m = url.match(/\/d\/([\w-]+)\//);
+  if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w600`;
+  // https://drive.google.com/open?id=FILE_ID
+  let m2 = url.match(/[?&]id=([\w-]+)/);
+  if (m2) return `https://drive.google.com/thumbnail?id=${m2[1]}&sz=w600`;
+  return url;
+}
+
+function abrirLightbox(src) {
+  $('lbImg').src = src;
+  $('lightbox').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function fecharLightbox() {
+  $('lightbox').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+/* ── CHART ───────────────────────────────────────────── */
+function atualizarGrafico(labels, kms) {
+  const ctx = $('graficoKm').getContext('2d');
+  if (grafico) grafico.destroy();
+
+  const grad = ctx.createLinearGradient(0,0,0,200);
+  grad.addColorStop(0,'rgba(232,23,58,.3)');
+  grad.addColorStop(1,'rgba(232,23,58,0)');
+
+  grafico = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'KM',
+        data: kms,
+        borderColor: '#e8173a',
+        backgroundColor: grad,
+        tension: 0.4, fill: true, borderWidth: 2.5,
+        pointBackgroundColor: '#e8173a', pointRadius: 4, pointHoverRadius: 7,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: { labels: { color:'#55556a', font:{ family:'Barlow Condensed', weight:'700', size:12 } } },
+        tooltip: {
+          backgroundColor:'#17171b', borderColor:'#2a2a32', borderWidth:1,
+          titleColor:'#f0f0f5', bodyColor:'#ff3d5e',
+          titleFont:{ family:'Barlow', weight:'700' },
+          bodyFont:{ family:'Barlow Condensed', weight:'700' },
+          callbacks: { label: c => ' ' + c.parsed.y.toLocaleString('pt-BR') + ' km' }
+        }
+      },
+      scales: {
+        x: { ticks:{ color:'#55556a', font:{family:'Barlow',size:11} }, grid:{ color:'#2a2a32' } },
+        y: { ticks:{ color:'#55556a', font:{family:'Barlow',size:11}, callback: v=>v.toLocaleString('pt-BR') }, grid:{ color:'#2a2a32' } }
+      }
+    }
+  });
+}
+
+carregarDados();
+
+// ── SERVICE WORKER (PWA) ──────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('✅ SW registrado'))
+      .catch(err => console.warn('SW erro:', err));
+  });
+}
+</script>
+</body>
+</html>
